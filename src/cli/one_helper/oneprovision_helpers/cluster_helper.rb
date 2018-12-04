@@ -65,10 +65,11 @@ class OneProvisionClusterHelper < OpenNebulaHelper::OneHelper
         table
     end
 
-    def create_cluster(cluster, provision_id)
+    def create_cluster(cluster, provision_id, provision_name)
         c = OpenNebula::Cluster.new(OpenNebula::Cluster.build_xml, @client)
 
         cluster['provision']['provision_id'] = provision_id
+        cluster['provision']['name'] = provision_name
         rc = c.allocate(cluster['name'])
 
         if OpenNebula.is_error?(rc)

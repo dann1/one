@@ -441,7 +441,11 @@ CommandParser::CmdParser.new(ARGV) do
 
     command [:host, :ssh], host_ssh_desc, :hostid, [:command, nil], :options=>CommandParser::OPTIONS do
         $host_helper.perform_action(args[0],options,"") do |host|
-            $host_helper.ssh_host(host, args)
+            begin
+                $host_helper.ssh_host(host, args)
+            rescue Exception => e
+                puts e.message if !e.is_a? SystemExit
+            end
         end
     end
 

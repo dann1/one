@@ -326,7 +326,13 @@ class OneProvisionHostHelper < OpenNebulaHelper::OneHelper
     end
 
     def ssh_host(host, args)
-        host.info
+        rc = host.info
+
+        if OpenNebula.is_error?(rc)
+            $common_helper.fail(rc.message)
+        end
+
+        check_host(host['TEMPLATE/PM_MAD'])
 
         ip = host["NAME"]
         private_key = host["TEMPLATE/PROVISION_CONNECTION/PRIVATE_KEY"]

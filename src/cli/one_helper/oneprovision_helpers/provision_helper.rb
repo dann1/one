@@ -18,6 +18,7 @@ require 'base64'
 
 class Provision
     attr_reader :id
+    attr_reader :name
 
     def initialize(id, name=nil)
         @id = id
@@ -45,6 +46,8 @@ class Provision
         @hosts = @hosts.map { |h|
             $host_helper.factory(h.id)
         }
+
+        @name = @clusters[0]['TEMPLATE/PROVISION/NAME'] if !@clusters.empty?
     end
 
     def append_cluster(cluster)
@@ -136,7 +139,7 @@ class Provision
         # delete all other deployed objects
         $logger.info('Deleting provision objects')
 
-        ['datastores', 'networks', 'clusters'].each do |section|
+        %w(datastores networks clusters).each do |section|
             self.send("#{section}").each do |obj|
                 $common_helper.retry_loop "Failed to delete #{section.chomp('s')} #{obj['ID']}" do
                     $logger.debug("Deleting OpenNebula #{section.chomp('s')}: #{obj['ID']}")
@@ -263,7 +266,7 @@ class OneProvisionProvisionHelper < OpenNebulaHelper::OneHelper
 
             element = {}
             element['ID'] = provision_list ? i : provision.clusters[0]['ID']
-            element['NAME'] = provision.clusters[0]['NAME']
+            element['NAME'] = provision.name
             element['STATUS'] = get_provision_status(provision.hosts)
 
             columns.each do |c|
@@ -302,7 +305,7 @@ class OneProvisionProvisionHelper < OpenNebulaHelper::OneHelper
 
         ret = {}
         ret['id'] = provision_id
-        ret['name'] = provision.clusters[0]['NAME']
+        ret['name'] = provision.name
         ret['status'] = get_provision_status(provision.hosts)
 
         ['clusters', 'datastores', 'hosts', 'networks'].each do |r|
@@ -338,16 +341,16 @@ class OneProvisionProvisionHelper < OpenNebulaHelper::OneHelper
 
                 $logger.info('Creating provision objects')
 
-                $common_helper.retry_loop "Failed to create cluster" do
+                $common_helper.retry_loop "Failed to create Cluster" do
                     if !cfg['cluster'].nil?
                         $logger.debug("Creating OpenNebula cluster: #{cfg['cluster']['name']}")
 
                         # create new cluster
-                        cluster = $cluster_helper.create_cluster(cfg['cluster'], provision.id)
+                        cluster = $cluster_helper.create_cluster(cfg['cluster'], provision.id, provision.name)
 
                         provision.append_cluster(cluster)
 
-                        $logger.debug("cluster created with ID: #{cluster['ID']}")
+                        $logger.debug("Cluster created with ID: #{cluster['ID']}")
                     else
                         cluster = $cluster_helper.get_cluster(provision.id)
                     end
@@ -355,26 +358,28 @@ class OneProvisionProvisionHelper < OpenNebulaHelper::OneHelper
 
                 $CLEANUP = true
 
-                ['datastores', 'networks'].each do |r|
+                %w(datastores networks).each do |r|
                     if !cfg["#{r}"].nil?
                         cfg["#{r}"].each do |x|
                             begin
                                 $common_helper.retry_loop "Failed to create #{r}: #{x['name']}" do
-                                    $logger.debug("Creating OpenNebula #{r}: #{x['name']}")
+                                    xev = $common_helper.evaluate_erb(whole_provision, x)
+
+                                    $logger.debug("Creating OpenNebula #{r.chomp('s')}: #{xev['name']}")
 
                                     if r == 'datastores'
                                         provision.append_datastore($datastore_helper.create_datastore(
-                                            $common_helper.evaluate_erb(whole_provision, x),
+                                            xev,
                                             cluster['ID'], provision.id, cfg['defaults']['provision']['driver']))
                                     else
                                         provision.append_network($vnet_helper.create_vnet(
-                                            $common_helper.evaluate_erb(whole_provision, x),
+                                            xev,
                                             cluster['ID'], provision.id, cfg['defaults']['provision']['driver']))
                                     end
 
                                     whole_provision.refresh
 
-                                    $logger.debug("#{r} created with ID: #{provision.instance_variable_get("@#{r}").last['ID']}")
+                                    $logger.debug("#{r.chomp('s').capitalize} created with ID: #{provision.instance_variable_get("@#{r}").last['ID']}")
                                 end
 
                             rescue OneProvisionCleanupException

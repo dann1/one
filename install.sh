@@ -514,6 +514,7 @@ INSTALL_ONEPROVISION_FILES=(
     ONEPROVISION_ONE_LIB_FILES:$LIB_LOCATION/ruby/cli/one_helper/oneprovision_helpers
     ONEPROVISION_CONF_FILES:$ETC_LOCATION/cli
     ONEPROVISION_ANSIBLE_FILES:$SHARE_LOCATION/oneprovision
+    ONEPROVISION_TEMPLATES_FILES:$SHARE_LOCATION/oneprovision
 )
 
 INSTALL_SUNSTONE_RUBY_FILES=(
@@ -1828,6 +1829,8 @@ ONEPROVISION_CONF_FILES="src/cli/etc/oneprovision_cluster.yaml \
                       src/cli/etc/oneprovision_vnet.yaml"
 
 ONEPROVISION_ANSIBLE_FILES="share/oneprovision/ansible"
+
+ONEPROVISION_TEMPLATES_FILES="share/oneprovision/templates"
 
 #-----------------------------------------------------------------------------
 # Sunstone files
