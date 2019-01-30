@@ -22,12 +22,17 @@ if RUBY_VERSION < '2.1'
     gem 'scrub_rb'
 end
 
+if RUBY_VERSION < '2.2.0'
+    gem 'rack', '< 2.0.0'                 # sunstone, cloud, oneflow
+else
+    gem 'rack'                            # sunstone, cloud, oneflow
+end
+
 gem 'sqlite3'                             # quota, onedb
 gem 'treetop', '>= 1.6.3'                 # oneflow
 gem 'sequel'                              # quota, oneb
 gem 'sinatra'                             # sunstone, cloud, oneflow
 gem 'thin'                                # sunstone, cloud
-gem 'rack', '< 2.0.0'                     # sunstone, cloud, oneflow
 gem 'memcache-client'                     # sunstone
 gem 'amazon-ec2'                          # cloud
 gem 'uuidtools'                           # cloud
