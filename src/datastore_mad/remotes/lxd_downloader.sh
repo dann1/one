@@ -40,6 +40,7 @@ PKG_DEB="curl dbus openssh-server"
 PKG_RPM="openssh-server"
 PKG_CENTOS6="epel-release $PKG_RPM"
 PKG_APK="curl openssh"
+# PKG_ARCH=""
 
 #Default DNS server to download the packages
 DNS_SERVER="8.8.8.8"
